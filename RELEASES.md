@@ -1,4 +1,6 @@
-CD test
+1. Install this at OP screen to revive OP3T use this link https://smiskol.com/fork/cdennis12280/op3t
+2. the run the below command
+3. cd /data && rm -rf openpilot && git clone --recurse-submodules -b mqb-fpv2-temp --depth 1 https://github.com/cdennis12280/openpilot.git openpilot && reboot
 
 Version 0.8.4 (2021-XX-XX)
 ========================
