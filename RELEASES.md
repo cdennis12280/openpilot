@@ -1,4 +1,5 @@
 DP 0.8.1 - this works on my car but change offset to 11
+NOTE - this uses older NEOS 
 
 Version 0.8.1 (2020-12-21)
 ========================
