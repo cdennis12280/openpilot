@@ -230,9 +230,9 @@ class CarState(CarStateBase):
                   #("BCM1_Rueckfahrlicht_Schalter", "Gateway_72", 0)]  # Reverse light from BCM
      # checks += [("Motor_14", 10)]  # From J623 Engine control module
 
-   # if CP.networkLocation == NetworkLocation.fwdCamera:
+    if CP.networkLocation == NetworkLocation.fwdCamera:
       # Extended CAN devices other than the camera are here on CANBUS.pt
-    #  signals += MqbExtraSignals.fwd_radar_signals
+      signals += MqbExtraSignals.fwd_radar_signals
       #checks += MqbExtraSignals.fwd_radar_checks
       #if CP.enableBsm:
        # signals += MqbExtraSignals.bsm_radar_signals
