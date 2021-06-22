@@ -227,8 +227,8 @@ class CarState(CarStateBase):
       #checks += [("EV_Gearshift", 10)]  # From J??? unknown EV control module
     elif CP.transmissionType == TransmissionType.manual:
       #signals += [("MO_Kuppl_schalter", "Motor_14", 0),  # Clutch switch
-                  ("BCM1_Rueckfahrlicht_Schalter", "Gateway_72", 0)]  # Reverse light from BCM
-      checks += [("Motor_14", 10)]  # From J623 Engine control module
+                  #("BCM1_Rueckfahrlicht_Schalter", "Gateway_72", 0)]  # Reverse light from BCM
+     # checks += [("Motor_14", 10)]  # From J623 Engine control module
 
     if CP.networkLocation == NetworkLocation.fwdCamera:
       # Extended CAN devices other than the camera are here on CANBUS.pt
