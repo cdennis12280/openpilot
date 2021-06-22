@@ -396,11 +396,11 @@ def thermald_thread():
     msg.deviceState.chargingDisabled = power_monitor.should_disable_charging(pandaState, off_ts)
 
     # Check if we need to shut down
-    if power_monitor.should_shutdown(pandaState, off_ts, started_seen, LEON):
-      cloudlog.info(f"shutting device down, offroad since {off_ts}")
-      # TODO: add function for blocking cloudlog instead of sleep
-      time.sleep(10)
-      HARDWARE.shutdown()
+   # if power_monitor.should_shutdown(pandaState, off_ts, started_seen, LEON):
+    #  cloudlog.info(f"shutting device down, offroad since {off_ts}")
+     # # TODO: add function for blocking cloudlog instead of sleep
+      #time.sleep(10)
+      #HARDWARE.shutdown()
 
     # If UI has crashed, set the brightness to reasonable non-zero value
     manager_state = messaging.recv_one_or_none(managerState_sock)
