@@ -238,7 +238,7 @@ class CarState(CarStateBase):
        # signals += MqbExtraSignals.bsm_radar_signals
         #checks += MqbExtraSignals.bsm_radar_checks
 
-    return 0
+    return CANParser(DBC[CP.carFingerprint]['pt'], signals)
 
   @staticmethod
   def get_cam_can_parser(CP):
