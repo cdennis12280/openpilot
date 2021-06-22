@@ -45,7 +45,7 @@ def set_core_affinity(core):
 def config_realtime_process(core, priority):
   gc.disable()
   set_realtime_priority(priority)
-  set_core_affinity(0)
+  set_core_affinity(core)
 
 
 class Ratekeeper():
