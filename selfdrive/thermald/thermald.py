@@ -12,7 +12,7 @@ import cereal.messaging as messaging
 from cereal import log
 from common.filter_simple import FirstOrderFilter
 from common.numpy_fast import clip, interp
-from common.params import Params, ParamKeyType
+from common.params import Params
 from common.realtime import DT_TRML, sec_since_boot
 from common.dict_helpers import strip_deprecated_keys
 from selfdrive.controls.lib.alertmanager import set_offroad_alert
@@ -36,8 +36,8 @@ DISCONNECT_TIMEOUT = 5.  # wait 5 seconds before going offroad after disconnect 
 
 prev_offroad_states: Dict[str, Tuple[bool, Optional[str]]] = {}
 
+LEON = False
 last_eon_fan_val = None
-
 
 def read_tz(x):
   if x is None:
@@ -61,24 +61,44 @@ def read_thermal(thermal_config):
 
 
 def setup_eon_fan():
+  global LEON
+
   os.system("echo 2 > /sys/module/dwc3_msm/parameters/otg_switch")
+
+  bus = SMBus(7, force=True)
+  try:
+    bus.write_byte_data(0x21, 0x10, 0xf)   # mask all interrupts
+    bus.write_byte_data(0x21, 0x03, 0x1)   # set drive current and global interrupt disable
+    bus.write_byte_data(0x21, 0x02, 0x2)   # needed?
+    bus.write_byte_data(0x21, 0x04, 0x4)   # manual override source
+  except IOError:
+    print("LEON detected")
+    LEON = True
+  bus.close()
 
 
 def set_eon_fan(val):
-  global last_eon_fan_val
+  global LEON, last_eon_fan_val
 
   if last_eon_fan_val is None or last_eon_fan_val != val:
     bus = SMBus(7, force=True)
-    try:
-      i = [0x1, 0x3 | 0, 0x3 | 0x08, 0x3 | 0x10][val]
-      bus.write_i2c_block_data(0x3d, 0, [i])
-    except IOError:
-      # tusb320
-      if val == 0:
-        bus.write_i2c_block_data(0x67, 0xa, [0])
-      else:
-        bus.write_i2c_block_data(0x67, 0xa, [0x20])
-        bus.write_i2c_block_data(0x67, 0x8, [(val - 1) << 6])
+    if LEON:
+      try:
+        i = [0x1, 0x3 | 0, 0x3 | 0x08, 0x3 | 0x10][val]
+        bus.write_i2c_block_data(0x3d, 0, [i])
+      except IOError:
+        # tusb320
+        if val == 0:
+          bus.write_i2c_block_data(0x67, 0xa, [0])
+          #bus.write_i2c_block_data(0x67, 0x45, [1<<2])
+        else:
+          #bus.write_i2c_block_data(0x67, 0x45, [0])
+          bus.write_i2c_block_data(0x67, 0xa, [0x20])
+          bus.write_i2c_block_data(0x67, 0x8, [(val - 1) << 6])
+    else:
+      bus.write_byte_data(0x21, 0x04, 0x2)
+      bus.write_byte_data(0x21, 0x03, (val*2)+1)
+      bus.write_byte_data(0x21, 0x04, 0x4)
     bus.close()
     last_eon_fan_val = val
 
@@ -155,7 +175,6 @@ def thermald_thread():
 
   network_type = NetworkType.none
   network_strength = NetworkStrength.unknown
-  network_info = None
 
   current_filter = FirstOrderFilter(0., CURRENT_TAU, DT_TRML)
   cpu_temp_filter = FirstOrderFilter(0., CPU_TEMP_TAU, DT_TRML)
@@ -223,7 +242,7 @@ def thermald_thread():
       if pandaState_prev is not None:
         if pandaState.pandaState.pandaType == log.PandaState.PandaType.unknown and \
           pandaState_prev.pandaState.pandaType != log.PandaState.PandaType.unknown:
-          params.clear_all(ParamKeyType.CLEAR_ON_PANDA_DISCONNECT)
+          params.panda_disconnect()
       pandaState_prev = pandaState
 
     # get_network_type is an expensive call. update every 10s
@@ -231,7 +250,6 @@ def thermald_thread():
       try:
         network_type = HARDWARE.get_network_type()
         network_strength = HARDWARE.get_network_strength(network_type)
-        network_info = HARDWARE.get_network_info()  # pylint: disable=assignment-from-none
       except Exception:
         cloudlog.exception("Error getting network status")
 
@@ -240,9 +258,6 @@ def thermald_thread():
     msg.deviceState.cpuUsagePercent = int(round(psutil.cpu_percent()))
     msg.deviceState.networkType = network_type
     msg.deviceState.networkStrength = network_strength
-    if network_info is not None:
-      msg.deviceState.networkInfo = network_info
-
     msg.deviceState.batteryPercent = HARDWARE.get_battery_capacity()
     msg.deviceState.batteryStatus = HARDWARE.get_battery_status()
     msg.deviceState.batteryCurrent = HARDWARE.get_battery_current()
@@ -350,17 +365,14 @@ def thermald_thread():
     startup_conditions["device_temp_good"] = thermal_status < ThermalStatus.danger
     set_offroad_alert_if_changed("Offroad_TemperatureTooHigh", (not startup_conditions["device_temp_good"]))
 
-    if TICI:
-      set_offroad_alert_if_changed("Offroad_NvmeMissing", (not Path("/data/media").is_mount()))
-
     # Handle offroad/onroad transition
     should_start = all(startup_conditions.values())
     if should_start != should_start_prev or (count == 0):
       params.put_bool("IsOffroad", not should_start)
       HARDWARE.set_power_save(not should_start)
       if TICI and not params.get_bool("EnableLteOnroad"):
-        fxn = "off" if should_start else "on"
-        os.system(f"nmcli radio wwan {fxn}")
+        fxn = "stop" if should_start else "start"
+        os.system(f"sudo systemctl {fxn} --no-block lte")
 
     if should_start:
       off_ts = None
@@ -384,7 +396,7 @@ def thermald_thread():
     msg.deviceState.chargingDisabled = power_monitor.should_disable_charging(pandaState, off_ts)
 
     # Check if we need to shut down
-    if power_monitor.should_shutdown(pandaState, off_ts, started_seen):
+    if power_monitor.should_shutdown(pandaState, off_ts, started_seen, LEON):
       cloudlog.info(f"shutting device down, offroad since {off_ts}")
       # TODO: add function for blocking cloudlog instead of sleep
       time.sleep(10)
@@ -401,10 +413,6 @@ def thermald_thread():
     msg.deviceState.chargingError = current_filter.x > 0. and msg.deviceState.batteryPercent < 90  # if current is positive, then battery is being discharged
     msg.deviceState.started = started_ts is not None
     msg.deviceState.startedMonoTime = int(1e9*(started_ts or 0))
-
-    last_ping = params.get("LastAthenaPingTime")
-    if last_ping is not None:
-      msg.deviceState.lastAthenaPingTime = int(last_ping)
 
     msg.deviceState.thermalStatus = thermal_status
     pm.send("deviceState", msg)
