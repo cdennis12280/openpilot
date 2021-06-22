@@ -63,7 +63,7 @@ def read_thermal(thermal_config):
 def setup_eon_fan():
   global LEON
 
-  os.system("echo 2 > /sys/module/dwc3_msm/parameters/otg_switch")
+#  os.system("echo 2 > /sys/module/dwc3_msm/parameters/otg_switch")
 
   bus = SMBus(7, force=True)
   try:
