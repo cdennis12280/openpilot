@@ -60,6 +60,7 @@ def read_thermal(thermal_config):
   return dat
 
 
+
 def setup_eon_fan():
   global LEON
 
@@ -101,7 +102,6 @@ def set_eon_fan(val):
       bus.write_byte_data(0x21, 0x04, 0x4)
     bus.close()
     last_eon_fan_val = val
-
 
 # temp thresholds to control fan speed - high hysteresis
 _TEMP_THRS_H = [50., 65., 80., 10000]
