@@ -221,22 +221,22 @@ class CarState(CarStateBase):
 
     if CP.transmissionType == TransmissionType.automatic:
       signals += [("GE_Fahrstufe", "Getriebe_11", 0)]  # Auto trans gear selector position
-      checks += [("Getriebe_11", 20)]  # From J743 Auto transmission control module
+      #checks += [("Getriebe_11", 20)]  # From J743 Auto transmission control module
     elif CP.transmissionType == TransmissionType.direct:
       signals += [("GearPosition", "EV_Gearshift", 0)]  # EV gear selector position
-      checks += [("EV_Gearshift", 10)]  # From J??? unknown EV control module
+      #checks += [("EV_Gearshift", 10)]  # From J??? unknown EV control module
     elif CP.transmissionType == TransmissionType.manual:
-      signals += [("MO_Kuppl_schalter", "Motor_14", 0),  # Clutch switch
+      #signals += [("MO_Kuppl_schalter", "Motor_14", 0),  # Clutch switch
                   ("BCM1_Rueckfahrlicht_Schalter", "Gateway_72", 0)]  # Reverse light from BCM
       checks += [("Motor_14", 10)]  # From J623 Engine control module
 
     if CP.networkLocation == NetworkLocation.fwdCamera:
       # Extended CAN devices other than the camera are here on CANBUS.pt
       signals += MqbExtraSignals.fwd_radar_signals
-      checks += MqbExtraSignals.fwd_radar_checks
-      if CP.enableBsm:
-        signals += MqbExtraSignals.bsm_radar_signals
-        checks += MqbExtraSignals.bsm_radar_checks
+      #checks += MqbExtraSignals.fwd_radar_checks
+      #if CP.enableBsm:
+       # signals += MqbExtraSignals.bsm_radar_signals
+        #checks += MqbExtraSignals.bsm_radar_checks
 
     return CANParser(DBC[CP.carFingerprint]['pt'], signals, checks, CANBUS.pt)
 
@@ -260,10 +260,10 @@ class CarState(CarStateBase):
     if CP.networkLocation == NetworkLocation.gateway:
       # Extended CAN devices other than the camera are here on CANBUS.cam
       signals += MqbExtraSignals.fwd_radar_signals
-      checks += MqbExtraSignals.fwd_radar_checks
+      #checks += MqbExtraSignals.fwd_radar_checks
       if CP.enableBsm:
         signals += MqbExtraSignals.bsm_radar_signals
-        checks += MqbExtraSignals.bsm_radar_checks
+        #checks += MqbExtraSignals.bsm_radar_checks
 
     # TODO: Re-enable checks enforcement with CP.enableStockCamera
     return CANParser(DBC[CP.carFingerprint]['pt'], signals, checks, CANBUS.cam, enforce_checks=False)
