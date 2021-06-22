@@ -36,9 +36,9 @@ def set_realtime_priority(level):
     os.sched_setscheduler(0, os.SCHED_FIFO, os.sched_param(level))
 
 
-def set_core_affinity(core):
-  if not PC:
-    os.sched_setaffinity(0, [core,])
+#def set_core_affinity(core):
+ # if not PC:
+  #  os.sched_setaffinity(0, [core,])
 
 
 def config_realtime_process(core, priority):
