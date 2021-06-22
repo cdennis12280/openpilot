@@ -37,14 +37,14 @@ def set_realtime_priority(level):
 
 
 #def set_core_affinity(core):
- # if not PC:
-  #  os.sched_setaffinity(0, [core,])
+  if not PC:
+    os.sched_setaffinity(0)
 
 
 def config_realtime_process(core, priority):
   gc.disable()
   set_realtime_priority(priority)
-#  set_core_affinity(core)
+  set_core_affinity(0)
 
 
 class Ratekeeper():
