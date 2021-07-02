@@ -269,8 +269,8 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
 
     EventName.startupMaster: {
         ET.PERMANENT: Alert(
-            "Welcome to CD-Pilot",
-            "Always keep hands on wheel and eyes on road",
+            "Welcome back Charlie",
+            "Enjoy your drive",
             AlertStatus.userPrompt, AlertSize.mid,
             Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., 15.),
     },
