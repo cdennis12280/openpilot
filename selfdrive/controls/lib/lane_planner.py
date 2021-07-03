@@ -8,13 +8,13 @@ from cereal import log
 TRAJECTORY_SIZE = 33
 # camera offset is meters from center car to camera
 if EON:
-    CAMERA_OFFSET = 0.06
+    CAMERA_OFFSET = 0.063
     PATH_OFFSET = 0.0
 elif TICI:
     CAMERA_OFFSET = -0.04
     PATH_OFFSET = -0.04
 else:
-    CAMERA_OFFSET = 0.06
+    CAMERA_OFFSET = 0.063
     PATH_OFFSET = 0.0
 
 
@@ -24,9 +24,9 @@ class LanePlanner:
         self.ll_x = np.zeros((TRAJECTORY_SIZE,))
         self.lll_y = np.zeros((TRAJECTORY_SIZE,))
         self.rll_y = np.zeros((TRAJECTORY_SIZE,))
-        self.lane_width_estimate = 3.0
+        self.lane_width_estimate = 2.95
         self.lane_width_certainty = 1.0
-        self.lane_width = 3.0
+        self.lane_width = 2.95
 
         self.lll_prob = 0.
         self.rll_prob = 0.
