@@ -88,8 +88,8 @@ def only_toyota_left(candidate_cars):
 # **** for use live only ****
 def fingerprint(logcan, sendcan):
   dp_car_assigned = Params().get('dp_car_assigned', encoding='utf8')
-  fixed_fingerprint = os.environ.get('FINGERPRINT', "" if dp_car_assigned is None else dp_car_assigned)
-  skip_fw_query = os.environ.get('SKIP_FW_QUERY', False)
+  fixed_fingerprint = "SKODA OCTAVIA 3RD GEN"
+  skip_fw_query = True
 
   if not fixed_fingerprint and not skip_fw_query:
     # Vin query only reliably works thorugh OBDII
