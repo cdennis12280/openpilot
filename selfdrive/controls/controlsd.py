@@ -198,6 +198,7 @@ class Controls:
     self.previous_traffic_mode = False
     self.resume_pressed = False
     self.resume_previously_pressed = False
+    self.speed_check = False
     self.update_toggles = False
 
     self.display_timer = 0
@@ -585,7 +586,7 @@ class Controls:
 
     # Check which actuators can be enabled
     standstill = CS.vEgo <= max(self.CP.minSteerSpeed, MIN_LATERAL_CONTROL_SPEED) or CS.standstill
-    CC.latActive = (self.active or self.always_on_lateral_active) and not CS.steerFaultTemporary and not CS.steerFaultPermanent and \
+    CC.latActive = (self.active or self.always_on_lateral_active) and self.speed_check and not CS.steerFaultTemporary and not CS.steerFaultPermanent and \
                    (not standstill or self.joystick_mode)
     CC.longActive = self.enabled and not self.events.contains(ET.OVERRIDE_LONGITUDINAL) and self.CP.openpilotLongitudinalControl
 
@@ -934,6 +935,7 @@ class Controls:
     self.always_on_lateral_active |= self.frogpilot_toggles.always_on_lateral_main or CS.cruiseState.enabled
     self.always_on_lateral_active &= self.frogpilot_toggles.always_on_lateral and CS.cruiseState.available
     self.always_on_lateral_active &= driving_gear
+    self.always_on_lateral_active &= self.speed_check
     self.always_on_lateral_active &= not (self.frogpilot_toggles.always_on_lateral_lkas and self.sm['frogpilotCarState'].alwaysOnLateralDisabled)
     self.always_on_lateral_active &= not (CS.brakePressed and CS.vEgo < self.frogpilot_toggles.always_on_lateral_pause_speed) or CS.standstill
 
@@ -969,6 +971,10 @@ class Controls:
 
     if self.sm.frame % 25 == 0 or self.resume_pressed:
       self.resume_previously_pressed = self.resume_pressed
+
+    self.speed_check = CS.vEgo >= self.frogpilot_toggles.pause_lateral_below_speed
+    self.speed_check |= self.frogpilot_toggles.pause_lateral_below_signal and not (CS.leftBlinker or CS.rightBlinker)
+    self.speed_check |= CS.standstill
 
     FPCC = custom.FrogPilotCarControl.new_message()
     FPCC.alwaysOnLateral = self.always_on_lateral_active
