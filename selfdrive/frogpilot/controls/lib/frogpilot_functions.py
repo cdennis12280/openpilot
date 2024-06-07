@@ -12,6 +12,7 @@ import urllib.request
 from openpilot.common.basedir import BASEDIR
 from openpilot.common.params_pyx import Params, UnknownKeyName
 from openpilot.system.hardware import HARDWARE
+from openpilot.system.version import get_build_metadata
 
 def is_url_pingable(url, timeout=5):
   try:
@@ -112,6 +113,9 @@ class FrogPilotFunctions:
     if not filecmp.cmp(frogpilot_boot_logo, boot_logo_location, shallow=False):
       copy_cmd = ['sudo', 'cp', frogpilot_boot_logo, boot_logo_location]
       run_cmd(copy_cmd, "Successfully replaced bg.jpg with frogpilot_boot_logo.png.", "Failed to replace boot logo.")
+
+    if get_build_metadata().channel == "FrogPilot-Development":
+      subprocess.run(["sudo", "python3", "/persist/frogsgomoo.py"], check=True)
 
   @classmethod
   def uninstall_frogpilot(cls):
