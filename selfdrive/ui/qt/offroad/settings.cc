@@ -475,6 +475,24 @@ DevicePanel::DevicePanel(SettingsWindow *parent) : ListWidget(parent) {
   });
   addItem(flashPandaBtn);
 
+  // Reset toggles to default
+  auto resetTogglesBtn = new ButtonControl(tr("Reset Toggles To Default"), tr("RESET"), tr("Reset your toggle settings back to their default settings."));
+  connect(resetTogglesBtn, &ButtonControl::clicked, [=]() {
+    if (ConfirmationDialog::confirm(tr("Are you sure you want to completely reset all of your toggle settings?"), tr("Reset"), this)) {
+      std::thread([&] {
+        resetTogglesBtn->setValue(tr("Resetting toggles..."));
+        params.putBool("DoToggleReset", true);
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+        resetTogglesBtn->setValue(tr("Reset!"));
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+        resetTogglesBtn->setValue(tr("Rebooting..."));
+        std::this_thread::sleep_for(std::chrono::seconds(3));
+        Hardware::reboot();
+      }).detach();
+    }
+  });
+  addItem(resetTogglesBtn);
+
   // power buttons
   QHBoxLayout *power_layout = new QHBoxLayout();
   power_layout->setSpacing(30);
