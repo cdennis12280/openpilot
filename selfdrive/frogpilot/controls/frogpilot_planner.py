@@ -60,8 +60,9 @@ class FrogPilotPlanner:
     v_ego = max(carState.vEgo, 0)
     v_lead = self.lead_one.vLead
 
-    lead_distance = self.lead_one.dRel
-    stopping_distance = STOP_DISTANCE
+    distance_offset = max(frogpilot_toggles.increased_stopping_distance + min(CITY_SPEED_LIMIT - v_ego, 0), 0)
+    lead_distance = self.lead_one.dRel - distance_offset
+    stopping_distance = STOP_DISTANCE + distance_offset
 
     if frogpilot_toggles.conditional_experimental_mode and controlsState.enabled:
       self.cem.update(carState, frogpilotNavigation, modelData, self.model_length, self.model_stopped, self.road_curvature, self.slower_lead, self.tracking_lead, v_ego, v_lead, frogpilot_toggles)
