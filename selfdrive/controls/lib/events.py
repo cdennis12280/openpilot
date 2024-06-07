@@ -961,6 +961,14 @@ EVENTS: dict[int, dict[str, Alert | AlertCallbackType]] = {
     ET.NO_ENTRY: NoEntryAlert("Please Don't Use the 'Development' Branch!"),
   },
 
+  EventName.openpilotCrashed: {
+    ET.PERMANENT: Alert(
+      "openpilot Crashed",
+      "Please Post the Error Log in the FrogPilot Discord!",
+      AlertStatus.normal, AlertSize.mid,
+      Priority.HIGH, VisualAlert.none, AudibleAlert.none, 10.),
+  },
+
   EventName.pedalInterceptorNoBrake: {
     ET.WARNING: Alert(
       "Braking Unavailable",
