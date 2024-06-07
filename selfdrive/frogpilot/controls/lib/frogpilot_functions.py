@@ -65,6 +65,25 @@ def update_frogpilot_toggles():
   thread = threading.Thread(target=update_params)
   thread.start()
 
+class MovingAverageCalculator:
+  def __init__(self):
+    self.reset_data()
+
+  def add_data(self, value):
+    if len(self.data) == 5:
+      self.total -= self.data.pop(0)
+    self.data.append(value)
+    self.total += value
+
+  def get_moving_average(self):
+    if len(self.data) == 0:
+      return None
+    return self.total / len(self.data)
+
+  def reset_data(self):
+    self.data = []
+    self.total = 0
+
 class FrogPilotFunctions:
   @classmethod
   def backup_frogpilot(cls):
