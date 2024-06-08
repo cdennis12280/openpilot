@@ -137,6 +137,7 @@ typedef struct UIScene {
   bool enabled;
   bool experimental_mode;
   bool experimental_mode_via_screen;
+  bool fahrenheit;
   bool has_auto_tune;
   bool has_lead;
   bool holiday_themes;
@@ -144,6 +145,7 @@ typedef struct UIScene {
   bool live_valid;
   bool map_open;
   bool model_randomizer;
+  bool numerical_temp;
   bool online;
   bool onroad_distance_button;
   bool parked;
