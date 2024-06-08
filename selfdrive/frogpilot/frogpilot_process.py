@@ -12,6 +12,7 @@ from openpilot.selfdrive.frogpilot.controls.frogpilot_planner import FrogPilotPl
 from openpilot.selfdrive.frogpilot.controls.lib.frogpilot_functions import FrogPilotFunctions, is_url_pingable
 from openpilot.selfdrive.frogpilot.controls.lib.frogpilot_variables import FrogPilotVariables
 from openpilot.selfdrive.frogpilot.controls.lib.model_manager import DEFAULT_MODEL, DEFAULT_MODEL_NAME, download_model, update_models
+from openpilot.selfdrive.frogpilot.controls.lib.theme_manager import ThemeManager
 
 WIFI = log.DeviceState.NetworkType.wifi
 
@@ -77,6 +78,7 @@ def frogpilot_thread():
 
   frogpilot_functions = FrogPilotFunctions()
   frogpilot_planner = FrogPilotPlanner()
+  theme_manager = ThemeManager()
 
   run_time_checks = False
   time_validated = system_time_valid()
@@ -127,6 +129,8 @@ def frogpilot_thread():
         time_validated = system_time_valid()
         if not time_validated:
           continue
+
+      theme_manager.update_holiday()
 
 def main():
   frogpilot_thread()
