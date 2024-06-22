@@ -23,6 +23,7 @@ class FrogPilotPlanner:
 
     self.cem = ConditionalExperimentalMode()
 
+    self.slower_lead = False
     self.tracking_lead = False
 
     self.acceleration_jerk = 0
@@ -90,6 +91,11 @@ class FrogPilotPlanner:
     self.tracking_lead = self.tracking_lead_mac.get_moving_average() >= PROBABILITY
 
   def update_follow_values(self, lead_distance, stopping_distance, v_ego, v_lead, frogpilot_toggles):
+    # Offset by FrogAi for FrogPilot for a more natural approach to a slower lead
+    if frogpilot_toggles.conditional_slower_lead and v_lead < v_ego:
+      distance_factor = max(lead_distance - (v_lead * self.t_follow), 1)
+      braking_offset = np.clip((v_ego - v_lead) - COMFORT_BRAKE, 1, distance_factor)
+      self.slower_lead = braking_offset > 1
 
   def update_v_cruise(self, carState, controlsState, frogpilotCarState, frogpilotNavigation, modelData, v_cruise, v_ego, frogpilot_toggles):
     v_cruise_cluster = max(controlsState.vCruiseCluster, v_cruise) * CV.KPH_TO_MS
