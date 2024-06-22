@@ -29,6 +29,8 @@ A_CRUISE_MAX_VALS_SPORT_PLUS = [4.0, 3.5, 3.0, 1.0, 0.9, 0.8, 0.6]
 
 TRAFFIC_MODE_BP = [0., CITY_SPEED_LIMIT]
 
+TARGET_LAT_A = 1.9
+
 def get_max_accel_eco(v_ego):
   return interp(v_ego, A_CRUISE_MAX_BP_CUSTOM, A_CRUISE_MAX_VALS_ECO)
 
@@ -63,6 +65,7 @@ class FrogPilotPlanner:
     self.speed_jerk = 0
     self.tracked_model_length = 0
     self.v_cruise = 0
+    self.vtsc_target = 0
 
     self.tracking_lead_mac = MovingAverageCalculator()
 
@@ -140,7 +143,7 @@ class FrogPilotPlanner:
 
     if controlsState.experimentalMode:
       self.min_accel = ACCEL_MIN
-    elif self.mtsc_target < v_cruise:
+    elif min(self.mtsc_target, self.vtsc_target) < v_cruise:
       self.min_accel = A_CRUISE_MIN
     elif frogpilot_toggles.map_deceleration and (eco_gear or sport_gear):
       if eco_gear:
@@ -260,6 +263,16 @@ class FrogPilotPlanner:
     else:
       self.slc_target = 0
 
+    # Pfeiferj's Vision Turn Controller
+    if frogpilot_toggles.vision_turn_controller and v_ego > CRUISING_SPEED and controlsState.enabled:
+      adjusted_road_curvature = self.road_curvature * frogpilot_toggles.curve_sensitivity
+      adjusted_target_lat_a = TARGET_LAT_A * frogpilot_toggles.turn_aggressiveness
+
+      self.vtsc_target = (adjusted_target_lat_a / adjusted_road_curvature)**0.5
+      self.vtsc_target = np.clip(self.vtsc_target, CRUISING_SPEED, v_cruise)
+    else:
+      self.vtsc_target = v_cruise if v_cruise != V_CRUISE_UNSET else 0
+
     if frogpilot_toggles.force_standstill and carState.standstill and not self.override_force_stop and controlsState.enabled:
       self.forcing_stop = True
       self.v_cruise = -1
@@ -279,7 +292,7 @@ class FrogPilotPlanner:
       self.forcing_stop = False
       self.tracked_model_length = 0
 
-      targets = [self.mtsc_target, self.slc_target - v_ego_diff]
+      targets = [self.mtsc_target, max(self.overridden_speed, self.slc_target) - v_ego_diff, self.vtsc_target]
       self.v_cruise = float(min([target if target > CRUISING_SPEED else v_cruise for target in targets]))
 
   def publish(self, sm, pm, frogpilot_toggles):
@@ -294,7 +307,8 @@ class FrogPilotPlanner:
     frogpilotPlan.speedJerkStock = float(J_EGO_COST * self.base_speed_jerk)
     frogpilotPlan.tFollow = float(self.t_follow)
 
-    frogpilotPlan.adjustedCruise = float(self.mtsc_target * (CV.MS_TO_KPH if frogpilot_toggles.is_metric else CV.MS_TO_MPH))
+    frogpilotPlan.adjustedCruise = float(min(self.mtsc_target, self.vtsc_target) * (CV.MS_TO_KPH if frogpilot_toggles.is_metric else CV.MS_TO_MPH))
+    frogpilotPlan.vtscControllingCurve = bool(self.mtsc_target > self.vtsc_target)
 
     frogpilotPlan.conditionalExperimentalActive = self.cem.experimental_mode
 
