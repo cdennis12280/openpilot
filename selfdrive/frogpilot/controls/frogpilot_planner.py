@@ -233,7 +233,14 @@ class FrogPilotPlanner:
     # Pfeiferj's Speed Limit Controller
     if frogpilot_toggles.speed_limit_controller:
       SpeedLimitController.update(frogpilotNavigation.navigationSpeedLimit, v_cruise, v_ego, frogpilot_toggles)
-      self.slc_target = SpeedLimitController.desired_speed_limit
+      unconfirmed_slc_target = SpeedLimitController.desired_speed_limit
+
+      if frogpilot_toggles.speed_limit_confirmation and self.slc_target != 0:
+        if self.params_memory.get_bool("SLCConfirmed"):
+          self.slc_target = unconfirmed_slc_target
+          self.params_memory.put_bool("SLCConfirmed", False)
+      else:
+        self.slc_target = unconfirmed_slc_target
     else:
       self.slc_target = 0
 
@@ -285,6 +292,7 @@ class FrogPilotPlanner:
 
     frogpilotPlan.slcSpeedLimit = self.slc_target
     frogpilotPlan.slcSpeedLimitOffset = SpeedLimitController.offset
+    frogpilotPlan.unconfirmedSlcSpeedLimit = SpeedLimitController.desired_speed_limit
 
     frogpilotPlan.vCruise = self.v_cruise
 
