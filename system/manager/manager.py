@@ -239,6 +239,7 @@ def manager_init(frogpilot_functions) -> None:
     ("MTSCAggressiveness", "100"),
     ("MTSCCurvatureCheck", "0"),
     ("MTSCEnabled", "1"),
+    ("NewLongAPI", "0"),
     ("NNFF", "1"),
     ("NNFFLite", "1"),
     ("NoLogging", "0"),
