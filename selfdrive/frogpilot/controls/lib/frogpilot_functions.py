@@ -2,6 +2,7 @@ import datetime
 import filecmp
 import glob
 import http.client
+import numpy as np
 import os
 import shutil
 import socket
@@ -15,6 +16,19 @@ from openpilot.common.basedir import BASEDIR
 from openpilot.common.params_pyx import Params, ParamKeyType, UnknownKeyName
 from openpilot.system.hardware import HARDWARE
 from openpilot.system.version import get_build_metadata
+
+def calculate_lane_width(lane, current_lane, road_edge):
+  current_x, current_y = np.array(current_lane.x), np.array(current_lane.y)
+  edge_x, edge_y = np.array(road_edge.x), np.array(road_edge.y)
+  lane_x, lane_y = np.array(lane.x), np.array(lane.y)
+
+  lane_y_interp = np.interp(current_x, lane_x[lane_x.argsort()], lane_y[lane_x.argsort()])
+  road_edge_y_interp = np.interp(current_x, edge_x[edge_x.argsort()], edge_y[edge_x.argsort()])
+
+  distance_to_lane = np.mean(np.abs(current_y - lane_y_interp))
+  distance_to_road_edge = np.mean(np.abs(current_y - road_edge_y_interp))
+
+  return float(min(distance_to_lane, distance_to_road_edge))
 
 def is_url_pingable(url, timeout=5):
   try:
