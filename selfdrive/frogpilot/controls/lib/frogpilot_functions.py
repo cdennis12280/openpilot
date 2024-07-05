@@ -1,11 +1,24 @@
 import filecmp
+import http.client
 import os
 import shutil
+import socket
 import subprocess
+import threading
+import time
+import urllib.error
+import urllib.request
 
 from openpilot.common.basedir import BASEDIR
 from openpilot.common.params_pyx import Params, UnknownKeyName
 from openpilot.system.hardware import HARDWARE
+
+def is_url_pingable(url, timeout=5):
+  try:
+    urllib.request.urlopen(url, timeout=timeout)
+    return True
+  except (urllib.error.URLError, socket.timeout, http.client.RemoteDisconnected):
+    return False
 
 def run_cmd(cmd, success_msg, fail_msg):
   try:
@@ -15,6 +28,17 @@ def run_cmd(cmd, success_msg, fail_msg):
     print(f"{fail_msg}: {e}")
   except Exception as e:
     print(f"Unexpected error occurred: {e}")
+
+def update_frogpilot_toggles():
+  def update_params():
+    params_memory = Params("/dev/shm/params")
+
+    params_memory.put_bool("FrogPilotTogglesUpdated", True)
+    time.sleep(1)
+    params_memory.put_bool("FrogPilotTogglesUpdated", False)
+
+  thread = threading.Thread(target=update_params)
+  thread.start()
 
 class FrogPilotFunctions:
   @classmethod
