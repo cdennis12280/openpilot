@@ -1117,6 +1117,79 @@ EVENTS: dict[int, dict[str, Alert | AlertCallbackType]] = {
       AlertStatus.normal, AlertSize.small,
       Priority.LOWEST, VisualAlert.none, AudibleAlert.none, .1, alert_rate=0.75),
   },
+
+  # Random Events
+  EventName.accel30: {
+    ET.WARNING: Alert(
+      "UwU U Went a Bit Fast There!",
+      "(⁄ ⁄•⁄ω⁄•⁄ ⁄)",
+      AlertStatus.frogpilot, AlertSize.mid,
+      Priority.LOW, VisualAlert.none, AudibleAlert.uwu, 4.),
+  },
+
+  EventName.accel35: {
+    ET.WARNING: Alert(
+      "I Ain't Giving You No Tree-Fiddy",
+      "You Damn Loch Ness Monsta!",
+      AlertStatus.frogpilot, AlertSize.mid,
+      Priority.LOW, VisualAlert.none, AudibleAlert.nessie, 4.),
+  },
+
+  EventName.accel40: {
+    ET.WARNING: Alert(
+      "Great Scott!",
+      "🚗💨",
+      AlertStatus.frogpilot, AlertSize.mid,
+      Priority.LOW, VisualAlert.none, AudibleAlert.doc, 4.),
+  },
+
+  EventName.dejaVuCurve: {
+    ET.WARNING: Alert(
+      "♬♪ Deja Vu! ᕕ(⌐■_■)ᕗ ♪♬",
+      "🏎️",
+      AlertStatus.frogpilot, AlertSize.mid,
+      Priority.LOW, VisualAlert.none, AudibleAlert.dejaVu, 4.),
+  },
+
+  EventName.firefoxSteerSaturated: {
+    ET.WARNING: Alert(
+      "Turn Exceeds Steering Limit",
+      "IE Has Stopped Responding...",
+      AlertStatus.userPrompt, AlertSize.mid,
+      Priority.LOW, VisualAlert.steerRequired, AudibleAlert.firefox, 4.),
+  },
+
+  EventName.hal9000: {
+    ET.WARNING: Alert(
+      "I'm Sorry Dave",
+      "I'm Afraid I Can't Do That...",
+      AlertStatus.normal, AlertSize.mid,
+      Priority.HIGH, VisualAlert.none, AudibleAlert.hal9000, 4.),
+  },
+
+  EventName.openpilotCrashedRandomEvents: {
+    ET.PERMANENT: Alert(
+      "openpilot Crashed 💩",
+      "Please Post the Error Log in the FrogPilot Discord!",
+      AlertStatus.normal, AlertSize.mid,
+      Priority.HIGHEST, VisualAlert.none, AudibleAlert.fart, 10.),
+  },
+
+  EventName.vCruise69: {
+    ET.PERMANENT: Alert(
+      "Lol 69",
+      "",
+      AlertStatus.frogpilot, AlertSize.small,
+      Priority.LOW, VisualAlert.none, AudibleAlert.noice, 2.),
+  },
+
+  EventName.yourFrogTriedToKillMe: {
+    ET.PERMANENT: Alert(
+      "Your Frog Tried to Kill Me...",
+      "👺",
+      AlertStatus.frogpilot, AlertSize.mid,
+      Priority.MID, VisualAlert.none, AudibleAlert.angry, 5.),
+  },
 }
 
 
