@@ -7,6 +7,7 @@ import os
 import shutil
 import socket
 import subprocess
+import sys
 import threading
 import time
 import urllib.error
@@ -29,6 +30,13 @@ def calculate_lane_width(lane, current_lane, road_edge):
   distance_to_road_edge = np.mean(np.abs(current_y - road_edge_y_interp))
 
   return float(min(distance_to_lane, distance_to_road_edge))
+
+# Credit goes to Pfeiferj!
+def calculate_road_curvature(modelData, v_ego):
+  orientation_rate = np.array(np.abs(modelData.orientationRate.z))
+  velocity = np.array(modelData.velocity.x)
+  max_pred_lat_acc = np.amax(orientation_rate * velocity)
+  return float(max(max_pred_lat_acc / max(v_ego**2, sys.float_info.min), sys.float_info.min))
 
 def is_url_pingable(url, timeout=5):
   try:
