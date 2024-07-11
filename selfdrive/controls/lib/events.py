@@ -986,6 +986,14 @@ EVENTS: dict[int, dict[str, Alert | AlertCallbackType]] = {
     ET.NO_ENTRY: NoEntryAlert("Please Don't Use the 'Development' Branch!"),
   },
 
+  EventName.forcingStop: {
+    ET.WARNING: Alert(
+      "Forcing the Car to Stop",
+      "Press the Gas Pedal or Resume Button to Override",
+      AlertStatus.frogpilot, AlertSize.mid,
+      Priority.MID, VisualAlert.none, AudibleAlert.prompt, 1.),
+  },
+
   EventName.noLaneAvailable: {
     ET.PERMANENT: no_lane_available_alert,
   },

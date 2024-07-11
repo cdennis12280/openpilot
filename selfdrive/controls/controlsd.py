@@ -196,6 +196,8 @@ class Controls:
     self.onroad_distance_pressed = False
     self.openpilot_crashed_triggered = False
     self.previous_traffic_mode = False
+    self.resume_pressed = False
+    self.resume_previously_pressed = False
     self.update_toggles = False
 
     self.display_timer = 0
@@ -237,8 +239,8 @@ class Controls:
       return
 
     # Block resume if cruise never previously enabled
-    resume_pressed = any(be.type in (ButtonType.accelCruise, ButtonType.resumeCruise) for be in CS.buttonEvents)
-    if not self.CP.pcmCruise and not self.v_cruise_helper.v_cruise_initialized and resume_pressed:
+    self.resume_pressed = any(be.type in (ButtonType.accelCruise, ButtonType.resumeCruise) for be in CS.buttonEvents)
+    if not self.CP.pcmCruise and not self.v_cruise_helper.v_cruise_initialized and self.resume_pressed:
       self.events.add(EventName.resumeBlocked)
 
     if not self.CP.notCar:
@@ -904,6 +906,9 @@ class Controls:
       t.join()
 
   def update_frogpilot_events(self, CS):
+    if self.sm['frogpilotPlan'].forcingStop:
+      self.events.add(EventName.forcingStop)
+
     if not self.openpilot_crashed_triggered and os.path.isfile(os.path.join(sentry.CRASHES_DIR, 'error.txt')):
       self.events.add(EventName.openpilotCrashed)
       self.openpilot_crashed_triggered = True
@@ -962,8 +967,12 @@ class Controls:
           self.experimental_mode = not self.experimental_mode
           self.params.put_bool_nonblocking("ExperimentalMode", self.experimental_mode)
 
+    if self.sm.frame % 25 == 0 or self.resume_pressed:
+      self.resume_previously_pressed = self.resume_pressed
+
     FPCC = custom.FrogPilotCarControl.new_message()
     FPCC.alwaysOnLateral = self.always_on_lateral_active
+    FPCC.resumePressed = self.resume_pressed or self.resume_previously_pressed
 
     return FPCC
 
