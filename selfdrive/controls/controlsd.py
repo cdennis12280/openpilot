@@ -22,7 +22,7 @@ from openpilot.common.swaglog import cloudlog
 
 from openpilot.selfdrive.car.car_helpers import get_car_interface, get_startup_event
 from openpilot.selfdrive.controls.lib.alertmanager import AlertManager, set_offroad_alert
-from openpilot.selfdrive.controls.lib.drive_helpers import VCruiseHelper, clip_curvature
+from openpilot.selfdrive.controls.lib.drive_helpers import IMPERIAL_INCREMENT, VCruiseHelper, clip_curvature
 from openpilot.selfdrive.controls.lib.events import Events, ET
 from openpilot.selfdrive.controls.lib.latcontrol import LatControl, MIN_LATERAL_CONTROL_SPEED
 from openpilot.selfdrive.controls.lib.latcontrol_pid import LatControlPID
@@ -994,7 +994,7 @@ class Controls:
         self.params_memory.put_int("CurrentRandomEvent", 5)
         self.random_event_triggered = True
 
-      conversion = 1 if self.is_metric else CV.KPH_TO_MPH
+      conversion = 1 if self.is_metric else IMPERIAL_INCREMENT
       v_cruise = max(self.v_cruise_helper.v_cruise_kph, self.v_cruise_helper.v_cruise_cluster_kph) * conversion
 
       if 70 > v_cruise >= 69:
