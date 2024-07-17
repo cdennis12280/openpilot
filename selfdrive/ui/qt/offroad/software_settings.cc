@@ -21,13 +21,19 @@ void SoftwarePanel::checkForUpdates() {
 }
 
 SoftwarePanel::SoftwarePanel(QWidget* parent) : ListWidget(parent) {
-  onroadLbl = new QLabel(tr("Updates are only downloaded while the car is off."));
+  onroadLbl = new QLabel(tr("Updates are only downloaded while the car is off or in park."));
   onroadLbl->setStyleSheet("font-size: 50px; font-weight: 400; text-align: left; padding-top: 30px; padding-bottom: 30px;");
   addItem(onroadLbl);
 
   // current version
   versionLbl = new LabelControl(tr("Current Version"), "");
   addItem(versionLbl);
+
+  // automatic updates toggle
+  ParamControl *automaticUpdatesToggle = new ParamControl("AutomaticUpdates", tr("Automatically Update FrogPilot"),
+                                                       tr("FrogPilot will automatically update itself and it's assets when you're offroad and connected to Wi-Fi."), "");
+  connect(automaticUpdatesToggle, &ToggleControl::toggleFlipped, this, updateFrogPilotToggles);
+  addItem(automaticUpdatesToggle);
 
   // download update btn
   downloadBtn = new ButtonControl(tr("Download"), tr("CHECK"));
@@ -38,6 +44,7 @@ SoftwarePanel::SoftwarePanel(QWidget* parent) : ListWidget(parent) {
     } else {
       std::system("pkill -SIGHUP -f system.updated.updated");
     }
+    paramsMemory.putBool("ManualUpdateInitiated", true);
   });
   addItem(downloadBtn);
 
@@ -54,6 +61,11 @@ SoftwarePanel::SoftwarePanel(QWidget* parent) : ListWidget(parent) {
   connect(targetBranchBtn, &ButtonControl::clicked, [=]() {
     auto current = params.get("GitBranch");
     QStringList branches = QString::fromStdString(params.get("UpdaterAvailableBranches")).split(",");
+    if (getDongleId().value_or("") != "FrogsGoMoo") {
+      branches.removeAll("FrogPilot-Development");
+      branches.removeAll("FrogPilot-New");
+      branches.removeAll("MAKE-PRS-HERE");
+    }
     for (QString b : {current.c_str(), "devel-staging", "devel", "nightly", "master-ci", "master"}) {
       auto i = branches.indexOf(b);
       if (i >= 0) {
@@ -83,6 +95,14 @@ SoftwarePanel::SoftwarePanel(QWidget* parent) : ListWidget(parent) {
   });
   addItem(uninstallBtn);
 
+  // error log button
+  auto errorLogBtn = new ButtonControl(tr("Error Log"), tr("VIEW"), tr("View the error log for openpilot crashes."));
+  connect(errorLogBtn, &ButtonControl::clicked, [=]() {
+    const std::string txt = util::read_file("/data/crashes/error.txt");
+    ConfirmationDialog::rich(QString::fromStdString(txt), this);
+  });
+  addItem(errorLogBtn);
+
   fs_watch = new ParamWatcher(this);
   QObject::connect(fs_watch, &ParamWatcher::paramChanged, [=](const QString &param_name, const QString &param_value) {
     updateLabels();
@@ -104,6 +124,9 @@ void SoftwarePanel::showEvent(QShowEvent *event) {
 }
 
 void SoftwarePanel::updateLabels() {
+  UIState *s = uiState();
+  UIScene &scene = s->scene;
+
   // add these back in case the files got removed
   fs_watch->addParam("LastUpdateTime");
   fs_watch->addParam("UpdateFailedCount");
@@ -114,9 +137,11 @@ void SoftwarePanel::updateLabels() {
     return;
   }
 
-  // updater only runs offroad
-  onroadLbl->setVisible(is_onroad);
-  downloadBtn->setVisible(!is_onroad);
+  // updater only runs offroad or when parked
+  bool parked = scene.parked;
+
+  onroadLbl->setVisible(is_onroad && !parked);
+  downloadBtn->setVisible(!is_onroad || parked);
 
   // download update
   QString updater_state = QString::fromStdString(params.get("UpdaterState"));
@@ -148,7 +173,7 @@ void SoftwarePanel::updateLabels() {
   versionLbl->setText(QString::fromStdString(params.get("UpdaterCurrentDescription")));
   versionLbl->setDescription(QString::fromStdString(params.get("UpdaterCurrentReleaseNotes")));
 
-  installBtn->setVisible(!is_onroad && params.getBool("UpdateAvailable"));
+  installBtn->setVisible((!is_onroad || parked) && params.getBool("UpdateAvailable"));
   installBtn->setValue(QString::fromStdString(params.get("UpdaterNewDescription")));
   installBtn->setDescription(QString::fromStdString(params.get("UpdaterNewReleaseNotes")));
 

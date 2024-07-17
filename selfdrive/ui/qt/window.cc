@@ -74,7 +74,12 @@ void MainWindow::closeSettings() {
   main_layout->setCurrentWidget(homeWindow);
 
   if (uiState()->scene.started) {
-    homeWindow->showSidebar(false);
+    // Map is always shown when using navigate on openpilot
+    if (uiState()->scene.navigate_on_openpilot) {
+      homeWindow->showMapPanel(true);
+    } else {
+      homeWindow->showSidebar(params.getBool("Sidebar"));
+    }
   }
 }
 
@@ -88,7 +93,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
     case QEvent::MouseMove: {
       // ignore events when device is awakened by resetInteractiveTimeout
       ignore = !device()->isAwake();
-      device()->resetInteractiveTimeout();
+      device()->resetInteractiveTimeout(uiState()->scene.screen_timeout, uiState()->scene.screen_timeout_onroad);
       break;
     }
     default:
