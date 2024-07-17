@@ -13,7 +13,7 @@ from openpilot.selfdrive.controls.lib.longitudinal_mpc_lib.long_mpc import A_CHA
                                                                            get_jerk_factor, get_safe_obstacle_distance, get_stopped_equivalence_factor, get_T_FOLLOW
 from openpilot.selfdrive.controls.lib.longitudinal_planner import A_CRUISE_MIN, Lead, get_max_accel
 
-from openpilot.selfdrive.frogpilot.controls.lib.conditional_experimental_mode import ConditionalExperimentalMode
+from openpilot.selfdrive.frogpilot.controls.lib.conditional_experimental_mode import MODEL_LENGTH, PLANNER_TIME, ConditionalExperimentalMode
 from openpilot.selfdrive.frogpilot.controls.lib.frogpilot_functions import MovingAverageCalculator, calculate_lane_width, calculate_road_curvature
 from openpilot.selfdrive.frogpilot.controls.lib.frogpilot_variables import CITY_SPEED_LIMIT, CRUISING_SPEED, PROBABILITY
 
@@ -23,11 +23,13 @@ class FrogPilotPlanner:
 
     self.cem = ConditionalExperimentalMode()
 
+    self.model_stopped = False
     self.slower_lead = False
     self.tracking_lead = False
 
     self.acceleration_jerk = 0
     self.danger_jerk = 0
+    self.model_length = 0
     self.road_curvature = 0
     self.speed_jerk = 0
     self.v_cruise = 0
@@ -45,7 +47,7 @@ class FrogPilotPlanner:
     stopping_distance = STOP_DISTANCE
 
     if frogpilot_toggles.conditional_experimental_mode and controlsState.enabled:
-      self.cem.update(carState, frogpilotNavigation, modelData, self.model_length, self.road_curvature, self.slower_lead, self.tracking_lead, v_ego, v_lead, frogpilot_toggles)
+      self.cem.update(carState, frogpilotNavigation, modelData, self.model_length, self.model_stopped, self.road_curvature, self.slower_lead, self.tracking_lead, v_ego, v_lead, frogpilot_toggles)
 
     if v_ego >= frogpilot_toggles.minimum_lane_change_speed:
       self.lane_width_left = calculate_lane_width(modelData.laneLines[0], modelData.laneLines[1], modelData.roadEdges[0])
@@ -54,6 +56,8 @@ class FrogPilotPlanner:
       self.lane_width_left = 0
       self.lane_width_right = 0
 
+    self.model_length = modelData.position.x[MODEL_LENGTH - 1]
+    self.model_stopped = self.model_length < CRUISING_SPEED * PLANNER_TIME
     self.road_curvature = calculate_road_curvature(modelData, v_ego)
 
     self.set_acceleration(controlsState, frogpilotCarState, v_cruise, v_ego, frogpilot_toggles)
@@ -84,7 +88,7 @@ class FrogPilotPlanner:
       self.speed_jerk = self.base_speed_jerk
 
   def set_lead_status(self, lead_distance, stopping_distance, v_ego):
-    following_lead = self.lead_one.status and 1 < lead_distance
+    following_lead = self.lead_one.status and 1 < lead_distance < max(self.model_length, stopping_distance) + MODEL_LENGTH
     following_lead &= v_ego > CRUISING_SPEED or self.tracking_lead
 
     self.tracking_lead_mac.add_data(following_lead)
