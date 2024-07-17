@@ -1,4 +1,5 @@
 import os
+import random
 import re
 
 from types import SimpleNamespace
@@ -192,7 +193,17 @@ class FrogPilotVariables:
     current_model_name = self.params_memory.get("CurrentModelName", block=openpilot_installed, encoding='utf-8')
     if current_model is None:
       toggle.model_manager = self.params.get_bool("ModelManagement", block=openpilot_installed)
-      if toggle.model_manager:
+      toggle.model_randomizer = toggle.model_manager and self.params.get_bool("ModelRandomizer", block=openpilot_installed)
+      if toggle.model_randomizer:
+        available_models = self.params.get("AvailableModels", block=openpilot_installed, encoding='utf-8').split(',')
+        available_model_names = self.params.get("AvailableModelsNames", block=openpilot_installed, encoding='utf-8').split(',')
+        blacklisted_models = (self.params.get("BlacklistedModels", block=openpilot_installed, encoding='utf-8') or '').split(',')
+        existing_models = [model for model in available_models if model not in blacklisted_models and os.path.exists(os.path.join(MODELS_PATH, f"{model}.thneed"))]
+        if existing_models:
+          toggle.model = random.choice(existing_models)
+        else:
+          toggle.model = DEFAULT_MODEL
+      elif toggle.model_manager:
         toggle.model = self.params.get("Model", block=openpilot_installed, encoding='utf-8')
       else:
         toggle.model = DEFAULT_MODEL
