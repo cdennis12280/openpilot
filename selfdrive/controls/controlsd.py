@@ -32,7 +32,7 @@ from openpilot.selfdrive.controls.lib.vehicle_model import VehicleModel
 
 from openpilot.system.hardware import HARDWARE
 
-from openpilot.selfdrive.frogpilot.controls.lib.frogpilot_variables import FrogPilotVariables
+from openpilot.selfdrive.frogpilot.controls.lib.frogpilot_variables import CRUISING_SPEED, FrogPilotVariables
 from openpilot.selfdrive.frogpilot.controls.lib.speed_limit_controller import SpeedLimitController
 
 SOFT_DISABLE_TIME = 3  # seconds
@@ -197,6 +197,7 @@ class Controls:
     self.onroad_distance_pressed = False
     self.openpilot_crashed_triggered = False
     self.previous_traffic_mode = False
+    self.previously_enabled = False
     self.resume_pressed = False
     self.resume_previously_pressed = False
     self.speed_check = False
@@ -914,6 +915,10 @@ class Controls:
     if self.sm['frogpilotPlan'].forcingStop:
       self.events.add(EventName.forcingStop)
 
+    if self.frogpilot_toggles.green_light_alert and self.previously_enabled and CS.standstill:
+      if self.sm['frogpilotPlan'].greenLight and not self.sm['longitudinalPlan'].hasLead:
+        self.events.add(EventName.greenLight)
+
     if not self.openpilot_crashed_triggered and os.path.isfile(os.path.join(sentry.CRASHES_DIR, 'error.txt')):
       self.events.add(EventName.openpilotCrashed)
       self.openpilot_crashed_triggered = True
@@ -975,6 +980,9 @@ class Controls:
         else:
           self.experimental_mode = not self.experimental_mode
           self.params.put_bool_nonblocking("ExperimentalMode", self.experimental_mode)
+
+    self.previously_enabled |= (self.enabled or self.always_on_lateral_active) and CS.vEgo > CRUISING_SPEED
+    self.previously_enabled &= driving_gear
 
     if self.sm.frame % 25 == 0 or self.resume_pressed:
       self.resume_previously_pressed = self.resume_pressed
