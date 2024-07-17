@@ -7,7 +7,6 @@
 
 #include "selfdrive/ui/qt/offroad/experimental_mode.h"
 #include "selfdrive/ui/qt/util.h"
-#include "selfdrive/ui/qt/widgets/drive_stats.h"
 #include "selfdrive/ui/qt/widgets/prime.h"
 
 #ifdef ENABLE_MAPS
@@ -56,7 +55,6 @@ void HomeWindow::showSidebar(bool show) {
 
 void HomeWindow::showMapPanel(bool show) {
   onroad->showMapPanel(show);
-  uiState()->scene.map_open = true;
 }
 
 void HomeWindow::updateState(const UIState &s) {
@@ -67,10 +65,6 @@ void HomeWindow::updateState(const UIState &s) {
     body->setEnabled(true);
     slayout->setCurrentWidget(body);
   }
-
-  if (s.scene.started) {
-    showDriverView(s.scene.driver_camera_timer >= 10, true);
-  }
 }
 
 void HomeWindow::offroadTransition(bool offroad) {
@@ -80,32 +74,23 @@ void HomeWindow::offroadTransition(bool offroad) {
     slayout->setCurrentWidget(home);
   } else {
     slayout->setCurrentWidget(onroad);
-    uiState()->scene.map_open = onroad->isMapVisible();
   }
 }
 
-void HomeWindow::showDriverView(bool show, bool started) {
+void HomeWindow::showDriverView(bool show) {
   if (show) {
     emit closeSettings();
     slayout->setCurrentWidget(driver_view);
-    sidebar->setVisible(show == false);
   } else {
-    if (started) {
-      slayout->setCurrentWidget(onroad);
-      sidebar->setVisible(params.getBool("Sidebar"));
-    } else {
-      slayout->setCurrentWidget(home);
-      sidebar->setVisible(show == false);
-    }
+    slayout->setCurrentWidget(home);
   }
+  sidebar->setVisible(show == false);
 }
 
 void HomeWindow::mousePressEvent(QMouseEvent* e) {
   // Handle sidebar collapsing
   if ((onroad->isVisible() || body->isVisible()) && (!sidebar->isVisible() || e->x() > sidebar->width())) {
     sidebar->setVisible(!sidebar->isVisible() && !onroad->isMapVisible());
-    uiState()->scene.map_open = onroad->isMapVisible();
-    params.putBool("Sidebar", sidebar->isVisible());
   }
 }
 
@@ -145,9 +130,6 @@ OffroadHome::OffroadHome(QWidget* parent) : QFrame(parent) {
   QObject::connect(alert_notif, &QPushButton::clicked, [=] { center_layout->setCurrentIndex(2); });
   header_layout->addWidget(alert_notif, 0, Qt::AlignHCenter | Qt::AlignLeft);
 
-  date = new ElidedLabel();
-  header_layout->addWidget(date, 0, Qt::AlignHCenter | Qt::AlignLeft);
-
   version = new ElidedLabel();
   header_layout->addWidget(version, 0, Qt::AlignHCenter | Qt::AlignRight);
 
@@ -171,12 +153,11 @@ OffroadHome::OffroadHome(QWidget* parent) : QFrame(parent) {
     left_widget->addWidget(new QWidget);
 #endif
     left_widget->addWidget(new PrimeAdWidget);
-    left_widget->addWidget(new DriveStats);
     left_widget->setStyleSheet("border-radius: 10px;");
 
-    left_widget->setCurrentIndex(2);
+    left_widget->setCurrentIndex(uiState()->hasPrime() ? 0 : 1);
     connect(uiState(), &UIState::primeChanged, [=](bool prime) {
-      left_widget->setCurrentIndex(2);
+      left_widget->setCurrentIndex(prime ? 0 : 1);
     });
 
     home_layout->addWidget(left_widget, 1);
@@ -243,14 +224,7 @@ void OffroadHome::hideEvent(QHideEvent *event) {
 }
 
 void OffroadHome::refresh() {
-  QString model = QString::fromStdString(params.get("ModelName"));
-
-  if (model.contains("(Default)")) {
-    model = model.remove("(Default)").trimmed();
-  }
-
-  date->setText(QLocale(uiState()->language.mid(5)).toString(QDateTime::currentDateTime(), "dddd, MMMM d"));
-  version->setText(getBrand() + " v" + getVersion().left(14).trimmed() + " - " + model);
+  version->setText(getBrand() + " " +  QString::fromStdString(params.get("UpdaterCurrentDescription")));
 
   bool updateAvailable = update_widget->refresh();
   int alerts = alerts_widget->refresh();

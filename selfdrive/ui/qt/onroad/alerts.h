@@ -29,9 +29,6 @@ protected:
     {cereal::ControlsState::AlertStatus::NORMAL, QColor(0x15, 0x15, 0x15, 0xf1)},
     {cereal::ControlsState::AlertStatus::USER_PROMPT, QColor(0xDA, 0x6F, 0x25, 0xf1)},
     {cereal::ControlsState::AlertStatus::CRITICAL, QColor(0xC9, 0x22, 0x31, 0xf1)},
-
-    // FrogPilot alert colors
-    {cereal::ControlsState::AlertStatus::FROGPILOT, QColor(0x17, 0x86, 0x44, 0xf1)},
   };
 
   void paintEvent(QPaintEvent*) override;
@@ -39,10 +36,4 @@ protected:
 
   QColor bg;
   Alert alert = {};
-
-  // FrogPilot variables
-  bool hideAlerts;
-  bool roadNameUI;
-  bool showAOLStatusBar;
-  bool showCEMStatusBar;
 };

@@ -39,9 +39,6 @@ private:
   OffroadAlert* alerts_widget;
   QPushButton* alert_notif;
   QPushButton* update_notif;
-
-  // FrogPilot variables
-  ElidedLabel* date;
 };
 
 class HomeWindow : public QWidget {
@@ -56,7 +53,7 @@ signals:
 
 public slots:
   void offroadTransition(bool offroad);
-  void showDriverView(bool show, bool started=false);
+  void showDriverView(bool show);
   void showSidebar(bool show);
   void showMapPanel(bool show);
 
@@ -71,9 +68,6 @@ private:
   BodyWindow *body;
   DriverViewWindow *driver_view;
   QStackedLayout *slayout;
-
-  // FrogPilot variables
-  Params params;
 
 private slots:
   void updateState(const UIState &s);

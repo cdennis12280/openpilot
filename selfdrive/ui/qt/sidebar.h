@@ -18,11 +18,6 @@ class Sidebar : public QFrame {
   Q_PROPERTY(QString netType MEMBER net_type NOTIFY valueChanged);
   Q_PROPERTY(int netStrength MEMBER net_strength NOTIFY valueChanged);
 
-  // FrogPilot properties
-  Q_PROPERTY(ItemStatus cpuStatus MEMBER cpu_status NOTIFY valueChanged)
-  Q_PROPERTY(ItemStatus memoryStatus MEMBER memory_status NOTIFY valueChanged)
-  Q_PROPERTY(ItemStatus storageStatus MEMBER storage_status NOTIFY valueChanged)
-
 public:
   explicit Sidebar(QWidget* parent = 0);
 
@@ -64,30 +59,4 @@ protected:
 
 private:
   std::unique_ptr<PubMaster> pm;
-
-  // FrogPilot variables
-  Params params;
-
-  ItemStatus cpu_status, memory_status, storage_status;
-
-  bool isCPU;
-  bool isGPU;
-  bool isIP;
-  bool isMemoryUsage;
-  bool isNumericalTemp;
-  bool isStorageLeft;
-  bool isStorageUsed;
-  bool sidebarMetrics;
-
-  std::unordered_map<int, std::pair<QString, std::vector<QColor>>> themeConfiguration;
-  std::unordered_map<int, QPixmap> flag_imgs;
-  std::unordered_map<int, QPixmap> home_imgs;
-  std::unordered_map<int, QPixmap> settings_imgs;
-
-  std::unordered_map<int, std::pair<QString, std::vector<QColor>>> holidayThemeConfiguration;
-  std::unordered_map<int, QPixmap> holiday_flag_imgs;
-  std::unordered_map<int, QPixmap> holiday_home_imgs;
-  std::unordered_map<int, QPixmap> holiday_settings_imgs;
-
-  std::vector<QColor> currentColors;
 };

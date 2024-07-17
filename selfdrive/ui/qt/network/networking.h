@@ -7,8 +7,6 @@
 #include "selfdrive/ui/qt/widgets/ssh_keys.h"
 #include "selfdrive/ui/qt/widgets/toggle.h"
 
-#include "selfdrive/frogpilot/ui/qt/widgets/frogpilot_controls.h"
-
 class WifiItem : public QWidget {
   Q_OBJECT
 public:
@@ -61,7 +59,7 @@ public:
 
 private:
   LabelControl* ipLabel;
-  FrogPilotButtonParamControl* tetheringToggle;
+  ToggleControl* tetheringToggle;
   ToggleControl* roamingToggle;
   ButtonControl* editApnButton;
   ButtonControl* hiddenNetworkButton;
@@ -74,7 +72,7 @@ signals:
   void requestWifiScreen();
 
 public slots:
-  void toggleTethering(int id);
+  void toggleTethering(bool enabled);
   void refresh();
 };
 
