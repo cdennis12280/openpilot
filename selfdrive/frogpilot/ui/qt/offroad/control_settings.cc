@@ -31,6 +31,14 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
   QDir modelDir("/data/models/");
 
   const std::vector<std::tuple<QString, QString, QString, QString>> controlToggles {
+    {"Acceleration1", tr("Acceleration 1"), tr(""), ""},
+    {"Acceleration2", tr("Acceleration 2"), tr(""), ""},
+    {"Acceleration3", tr("Acceleration 3"), tr(""), ""},
+    {"Acceleration4", tr("Acceleration 4"), tr(""), ""},
+    {"Acceleration5", tr("Acceleration 5"), tr(""), ""},
+    {"Acceleration6", tr("Acceleration 6"), tr(""), ""},
+    {"Acceleration7", tr("Acceleration 7"), tr(""), ""},
+
     {"AlwaysOnLateral", tr("Always on Lateral"), tr("Maintain openpilot lateral control when the brake or gas pedals are used.\n\nDeactivation occurs only through the 'Cruise Control' button."), "../frogpilot/assets/toggle_icons/icon_always_on_lateral.png"},
     {"AlwaysOnLateralLKAS", tr("Control Via LKAS Button"), tr("Enable or disable 'Always On Lateral' by clicking your 'LKAS' button."), ""},
     {"AlwaysOnLateralMain", tr("Enable On Cruise Main"), tr("Enable 'Always On Lateral' by clicking your 'Cruise Control' button without requiring openpilot to be enabled first."), ""},
@@ -166,7 +174,10 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
   for (const auto &[param, title, desc, icon] : controlToggles) {
     AbstractControl *controlToggle;
 
-    if (param == "AlwaysOnLateral") {
+    if (param == "Acceleration1" || param == "Acceleration2" || param == "Acceleration3" || param == "Acceleration4" || param == "Acceleration5" || param == "Acceleration6" || param == "Acceleration7") {
+      controlToggle = new FrogPilotParamValueControl(param, title, desc, icon, 0.1, 4, std::map<int, QString>(), this, false, tr(" m/s"), 1, 0.01);
+
+    } else if (param == "AlwaysOnLateral") {
       FrogPilotParamManageControl *aolToggle = new FrogPilotParamManageControl(param, title, desc, icon, this);
       QObject::connect(aolToggle, &FrogPilotParamManageControl::manageButtonClicked, this, [this]() {
         for (auto &[key, toggle] : toggles) {

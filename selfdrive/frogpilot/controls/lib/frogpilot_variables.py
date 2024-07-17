@@ -71,6 +71,14 @@ class FrogPilotVariables:
     distance_conversion = 1. if toggle.is_metric else CV.FOOT_TO_METER
     speed_conversion = CV.KPH_TO_MS if toggle.is_metric else CV.MPH_TO_MS
 
+    toggle.accel1 = self.params.get_float("Acceleration1")
+    toggle.accel2 = self.params.get_float("Acceleration2")
+    toggle.accel3 = self.params.get_float("Acceleration3")
+    toggle.accel4 = self.params.get_float("Acceleration4")
+    toggle.accel5 = self.params.get_float("Acceleration5")
+    toggle.accel6 = self.params.get_float("Acceleration6")
+    toggle.accel7 = self.params.get_float("Acceleration7")
+
     toggle.alert_volume_control = self.params.get_bool("AlertVolumeControl")
     toggle.disengage_volume = self.params.get_int("DisengageVolume") if toggle.alert_volume_control else 100
     toggle.engage_volume = self.params.get_int("EngageVolume") if toggle.alert_volume_control else 100
