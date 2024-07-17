@@ -18,6 +18,8 @@ from openpilot.common.params_pyx import Params, ParamKeyType, UnknownKeyName
 from openpilot.system.hardware import HARDWARE
 from openpilot.system.version import get_build_metadata
 
+MODELS_PATH = "/data/models"
+
 def calculate_lane_width(lane, current_lane, road_edge):
   current_x, current_y = np.array(current_lane.x), np.array(current_lane.y)
   edge_x, edge_y = np.array(road_edge.x), np.array(road_edge.y)
@@ -189,6 +191,7 @@ class FrogPilotFunctions:
     remount_persist = ['sudo', 'mount', '-o', 'remount,rw', '/persist']
     run_cmd(remount_persist, "Successfully remounted /persist as read-write.", "Failed to remount /persist.")
 
+    os.makedirs(MODELS_PATH, exist_ok=True)
     os.makedirs("/persist/params", exist_ok=True)
 
     frogpilot_boot_logo = f'{BASEDIR}/selfdrive/frogpilot/assets/other_images/frogpilot_boot_logo.png'

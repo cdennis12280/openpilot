@@ -11,6 +11,7 @@ from openpilot.system.hardware import HARDWARE
 from openpilot.selfdrive.frogpilot.controls.frogpilot_planner import FrogPilotPlanner
 from openpilot.selfdrive.frogpilot.controls.lib.frogpilot_functions import FrogPilotFunctions, is_url_pingable
 from openpilot.selfdrive.frogpilot.controls.lib.frogpilot_variables import FrogPilotVariables
+from openpilot.selfdrive.frogpilot.controls.lib.model_manager import DEFAULT_MODEL, DEFAULT_MODEL_NAME, download_model, update_models
 
 WIFI = log.DeviceState.NetworkType.wifi
 
@@ -38,6 +39,7 @@ def time_checks(automatic_updates, deviceState, now, started, params, params_mem
       automatic_update_check(started, params)
 
   update_maps(now, params, params_memory)
+  update_models(params, params_memory, False, started)
 
 def update_maps(now, params, params_memory):
   maps_selected = params.get("MapsSelected")
@@ -97,10 +99,17 @@ def frogpilot_thread():
                                sm['frogpilotNavigation'], sm['modelV2'], sm['radarState'], frogpilot_toggles)
       frogpilot_planner.publish(sm, pm, frogpilot_toggles)
 
+    if params_memory.get("ModelToDownload", encoding='utf-8') is not None:
+      download_model(params_memory)
+
     if FrogPilotVariables.toggles_updated:
       update_toggles = True
     elif update_toggles:
       FrogPilotVariables.update_frogpilot_params(started)
+
+      if not frogpilot_toggles.model_manager:
+        params.put("Model", DEFAULT_MODEL)
+        params.put("ModelName", DEFAULT_MODEL_NAME)
 
       if time_validated and not started:
         frogpilot_functions.backup_toggles()
