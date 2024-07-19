@@ -208,13 +208,11 @@ def get_car(params, logcan, sendcan, disable_openpilot_long, experimental_long_a
     params.put("CarMake", candidate.split('_')[0].title())
     params.put("CarModel", candidate)
 
-  if get_build_metadata().channel == "FrogPilot-Development" and params.get("DongleId").decode('utf-8') != "FrogsGoMoo":
+  if get_build_metadata().channel == "FrogPilot-Development" and params.get("DongleId", encoding='utf-8') != "FrogsGoMoo":
     candidate = "MOCK"
-    fingerprint_log = threading.Thread(target=sentry.capture_fingerprint, args=(candidate, params, True,))
-    fingerprint_log.start()
+    threading.Thread(target=sentry.capture_fingerprint, args=(candidate, params, True,)).start()
   elif not params.get_bool("FingerprintLogged"):
-    fingerprint_log = threading.Thread(target=sentry.capture_fingerprint, args=(candidate, params,))
-    fingerprint_log.start()
+    threading.Thread(target=sentry.capture_fingerprint, args=(candidate, params,)).start()
 
   CarInterface, _, _ = interfaces[candidate]
   CP = CarInterface.get_params(params, candidate, fingerprints, car_fw, disable_openpilot_long, experimental_long_allowed, docs=False)

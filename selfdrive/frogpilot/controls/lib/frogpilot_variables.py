@@ -13,9 +13,9 @@ from openpilot.system.version import get_build_metadata
 from openpilot.selfdrive.frogpilot.controls.lib.frogpilot_functions import MODELS_PATH
 from openpilot.selfdrive.frogpilot.controls.lib.model_manager import DEFAULT_MODEL, DEFAULT_MODEL_NAME, NAVIGATION_MODELS, RADARLESS_MODELS, STAGING_MODELS
 
-CITY_SPEED_LIMIT = 25                   # 55mph is typically the minimum speed for highways
-CRUISING_SPEED = 5                      # Roughly the speed cars go when not touching the gas while in drive
-PROBABILITY = 0.6                       # 60% chance of condition being true
+CITY_SPEED_LIMIT = 25  # 55mph is typically the minimum speed for highways
+CRUISING_SPEED = 5     # Roughly the speed cars go when not touching the gas while in drive
+PROBABILITY = 0.6      # 60% chance of condition being true
 
 def process_model_name(model_name):
   model_cleaned = re.sub(r'[🗺️👀📡]', '', model_name).strip()
@@ -197,30 +197,28 @@ class FrogPilotVariables:
     toggle.mtsc_curvature_check = toggle.map_turn_speed_controller and self.params.get_bool("MTSCCurvatureCheck")
     self.params_memory.put_float("MapTargetLatA", 2 * (self.params.get_int("MTSCAggressiveness") / 100.))
 
-    current_model = self.params_memory.get("CurrentModel", block=openpilot_installed, encoding='utf-8')
-    current_model_name = self.params_memory.get("CurrentModelName", block=openpilot_installed, encoding='utf-8')
-    if current_model is None:
-      toggle.model_manager = self.params.get_bool("ModelManagement", block=openpilot_installed)
-      toggle.model_randomizer = toggle.model_manager and self.params.get_bool("ModelRandomizer", block=openpilot_installed)
+    toggle.model_manager = self.params.get_bool("ModelManagement", block=openpilot_installed)
+    available_models = self.params.get("AvailableModels", block=toggle.model_manager, encoding='utf-8')
+    available_model_names = self.params.get("AvailableModelsNames", block=toggle.model_manager, encoding='utf-8')
+    current_model = self.params_memory.get("CurrentModel", encoding='utf-8')
+    current_model_name = self.params_memory.get("CurrentModelName", encoding='utf-8')
+    if toggle.model_manager and available_models is not None and current_model is None:
+      toggle.model_randomizer = toggle.model_manager and self.params.get_bool("ModelRandomizer")
       if toggle.model_randomizer:
-        available_models = self.params.get("AvailableModels", block=openpilot_installed, encoding='utf-8').split(',')
-        available_model_names = self.params.get("AvailableModelsNames", block=openpilot_installed, encoding='utf-8').split(',')
-        blacklisted_models = (self.params.get("BlacklistedModels", block=openpilot_installed, encoding='utf-8') or '').split(',')
-        existing_models = [model for model in available_models if model not in blacklisted_models and os.path.exists(os.path.join(MODELS_PATH, f"{model}.thneed"))]
+        blacklisted_models = (self.params.get("BlacklistedModels", encoding='utf-8') or '').split(',')
+        existing_models = [model for model in available_models.split(',') if model not in blacklisted_models and os.path.exists(os.path.join(MODELS_PATH, f"{model}.thneed"))]
         if existing_models:
           toggle.model = random.choice(existing_models)
         else:
           toggle.model = DEFAULT_MODEL
       elif toggle.model_manager:
-        toggle.model = self.params.get("Model", block=openpilot_installed, encoding='utf-8')
+        toggle.model = self.params.get("Model", block=True, encoding='utf-8')
       else:
         toggle.model = DEFAULT_MODEL
       if self.release and toggle.model in STAGING_MODELS:
         toggle.model = DEFAULT_MODEL
-      available_models = self.params.get("AvailableModels", block=openpilot_installed, encoding='utf-8').split(',')
-      available_model_names = self.params.get("AvailableModelsNames", block=openpilot_installed, encoding='utf-8').split(',')
-      model_index = available_models.index(toggle.model)
-      current_model_name = available_model_names[model_index]
+      model_index = available_models.split(',').index(toggle.model)
+      current_model_name = available_model_names.split(',')[model_index]
       self.params_memory.put("CurrentModel", toggle.model)
       self.params_memory.put("CurrentModelName", current_model_name)
     else:

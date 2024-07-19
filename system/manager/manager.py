@@ -2,10 +2,7 @@
 import datetime
 import os
 import signal
-import subprocess
 import sys
-import threading
-import time
 import traceback
 
 from cereal import log
@@ -19,54 +16,23 @@ from openpilot.system.manager.process import ensure_running
 from openpilot.system.manager.process_config import managed_processes
 from openpilot.system.athena.registration import register, UNREGISTERED_DONGLE_ID
 from openpilot.common.swaglog import cloudlog, add_file_handler
-from openpilot.common.time import system_time_valid
 from openpilot.system.version import get_build_metadata, terms_version, training_version
 
-from openpilot.selfdrive.frogpilot.controls.lib.frogpilot_functions import FrogPilotFunctions
-from openpilot.selfdrive.frogpilot.controls.lib.model_manager import DEFAULT_MODEL, DEFAULT_MODEL_NAME, update_models
+from openpilot.selfdrive.frogpilot.controls.lib.frogpilot_functions import frogpilot_boot_functions, setup_frogpilot, uninstall_frogpilot
+from openpilot.selfdrive.frogpilot.controls.lib.model_manager import DEFAULT_MODEL, DEFAULT_MODEL_NAME
 
-
-def frogpilot_boot_functions(frogpilot_functions):
-  while not system_time_valid():
-    print("Waiting for system time to become valid...")
-    time.sleep(1)
-
-  try:
-    frogpilot_functions.backup_frogpilot()
-  except subprocess.CalledProcessError as e:
-    print(f"Failed to backup FrogPilot. Error: {e}")
-    return
-
-  try:
-    frogpilot_functions.backup_toggles()
-  except subprocess.CalledProcessError as e:
-    print(f"Failed to backup toggles. Error: {e}")
-    return
-
-  try:
-    update_models(Params(), Params("/dev/shm/params"))
-  except subprocess.CalledProcessError as e:
-    print(f"Failed to delete deprecated models. Error: {e}")
-    return
-
-def manager_init(frogpilot_functions) -> None:
-  frogpilot_boot = threading.Thread(target=frogpilot_boot_functions, args=(frogpilot_functions,))
-  frogpilot_boot.start()
-
+def manager_init() -> None:
   save_bootlog()
 
   build_metadata = get_build_metadata()
 
   params = Params()
   params_storage = Params("/persist/params")
-  params_tracking = Params("/persist/tracking")
   params.clear_all(ParamKeyType.CLEAR_ON_MANAGER_START)
   params.clear_all(ParamKeyType.CLEAR_ON_ONROAD_TRANSITION)
   params.clear_all(ParamKeyType.CLEAR_ON_OFFROAD_TRANSITION)
   if build_metadata.release_channel:
     params.clear_all(ParamKeyType.DEVELOPMENT_ONLY)
-
-  frogpilot_functions.convert_params(params, params_storage, params_tracking)
 
   default_params: list[tuple[str, str | bytes]] = [
     ("CarParamsPersistent", ""),
@@ -240,7 +206,6 @@ def manager_init(frogpilot_functions) -> None:
     ("Model", DEFAULT_MODEL),
     ("ModelManagement", "0"),
     ("ModelName", DEFAULT_MODEL_NAME),
-    ("ModelsDownloaded", "0"),
     ("ModelSelector", "0"),
     ("ModelUI", "1"),
     ("MTSCAggressiveness", "100"),
@@ -530,10 +495,10 @@ def manager_thread() -> None:
       break
 
 
-def main(frogpilot_functions) -> None:
-  frogpilot_functions.setup_frogpilot()
-
-  manager_init(frogpilot_functions)
+def main() -> None:
+  setup_frogpilot()
+  frogpilot_boot_functions()
+  manager_init()
   if os.getenv("PREPAREONLY") is not None:
     return
 
@@ -551,7 +516,7 @@ def main(frogpilot_functions) -> None:
   params = Params()
   if params.get_bool("DoUninstall"):
     cloudlog.warning("uninstalling")
-    frogpilot_functions.uninstall_frogpilot()
+    uninstall_frogpilot()
   elif params.get_bool("DoReboot"):
     cloudlog.warning("reboot")
     HARDWARE.reboot()
@@ -564,7 +529,7 @@ if __name__ == "__main__":
   unblock_stdout()
 
   try:
-    main(FrogPilotFunctions())
+    main()
   except KeyboardInterrupt:
     print("got CTRL-C, exiting")
   except Exception:

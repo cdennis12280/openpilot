@@ -27,9 +27,9 @@ A_CRUISE_MAX_VALS_ECO =   [1.4, 1.2, 1.0, 0.8, 0.6, 0.4, 0.2]
 A_CRUISE_MAX_VALS_SPORT = [3.0, 2.5, 2.0, 1.0, 0.9, 0.8, 0.6]
 A_CRUISE_MAX_VALS_SPORT_PLUS = [4.0, 3.5, 3.0, 1.0, 0.9, 0.8, 0.6]
 
-TRAFFIC_MODE_BP = [0., CITY_SPEED_LIMIT]
-
 TARGET_LAT_A = 1.9
+
+TRAFFIC_MODE_BP = [0., CITY_SPEED_LIMIT]
 
 def get_max_accel_eco(v_ego):
   return interp(v_ego, A_CRUISE_MAX_BP_CUSTOM, A_CRUISE_MAX_VALS_ECO)
@@ -118,7 +118,7 @@ class FrogPilotPlanner:
     self.override_force_stop |= carState.gasPressed
     self.override_force_stop |= frogpilot_toggles.force_stops and carState.standstill and self.tracking_lead
     self.override_force_stop |= frogpilotCarControl.resumePressed
-    self.road_curvature = calculate_road_curvature(modelData, v_ego)
+    self.road_curvature = calculate_road_curvature(modelData, v_ego) if v_ego > CRUISING_SPEED else 1
 
     if frogpilot_toggles.random_events:
       self.taking_curve_quickly = v_ego > (1 / self.road_curvature)**0.5 * 2 > CRUISING_SPEED * 2 and abs(carState.steeringAngleDeg) > 30
@@ -209,7 +209,7 @@ class FrogPilotPlanner:
       self.speed_jerk = self.base_speed_jerk
 
   def set_lead_status(self, lead_distance, stopping_distance, v_ego):
-    following_lead = self.lead_one.status and 1 < lead_distance < max(self.model_length, stopping_distance) + MODEL_LENGTH
+    following_lead = self.lead_one.status and 1 < lead_distance < self.model_length + stopping_distance
     following_lead &= v_ego > CRUISING_SPEED or self.tracking_lead
 
     self.tracking_lead_mac.add_data(following_lead)
