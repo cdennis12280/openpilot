@@ -111,7 +111,6 @@ const uint32_t TOYOTA_PARAM_LTA = 4UL << TOYOTA_PARAM_OFFSET;
 const uint32_t TOYOTA_PARAM_GAS_INTERCEPTOR = 8UL << TOYOTA_PARAM_OFFSET;
 const uint32_t TOYOTA_PARAM_SECOC_CAR = 8UL << TOYOTA_PARAM_OFFSET;
 
-bool toyota_alt_brake = false;
 bool toyota_alt_brake_224 = false;
 bool toyota_alt_brake_101 = false;
 bool toyota_alt_pcm_cruise_176 = false;
