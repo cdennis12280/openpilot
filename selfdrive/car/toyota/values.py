@@ -16,6 +16,10 @@ PEDAL_TRANSITION = 10. * CV.MPH_TO_MS
 
 
 class CarControllerParams:
+  ACCEL_MAX = 1.5  # m/s2, lower than allowed 2.0 m/s2 for tuning reasons
+  ACCEL_MAX_PLUS = 4.0  # m/s2
+  ACCEL_MIN = -3.5  # m/s2
+
   STEER_STEP = 1
   STEER_MAX = 1500
   STEER_ERROR_MAX = 350     # max delta between torque cmd and torque motor
@@ -30,12 +34,6 @@ class CarControllerParams:
   ANGLE_RATE_LIMIT_DOWN = AngleRateLimit(speed_bp=[5, 25], angle_v=[0.36, 0.26])
 
   def __init__(self, CP):
-    if CP.flags & ToyotaFlags.RAISED_ACCEL_LIMIT:
-      self.ACCEL_MAX = 2.0
-    else:
-      self.ACCEL_MAX = 1.5  # m/s2, lower than allowed 2.0 m/s^2 for tuning reasons
-    self.ACCEL_MIN = -3.5  # m/s2
-
     if CP.lateralTuning.which == 'torque':
       self.STEER_DELTA_UP = 15       # 1.0s time to peak torque
       self.STEER_DELTA_DOWN = 25     # always lower than 45 otherwise the Rav4 faults (Prius seems ok with 50)
@@ -66,6 +64,12 @@ class ToyotaFlags(IntFlag):
   # FrogPilot Toyota flags
   RADAR_CAN_FILTER = 2048
   ZSS = 4096
+
+  # SecOC Flags
+  SECOC = 8192
+  ALT_GAS_MSG = 16384
+  GEAR_PACKET_HYBRID = 32768
+
 
 class Footnote(Enum):
   CAMRY = CarFootnote(
@@ -252,6 +256,12 @@ class CAR(Platforms):
     ],
     TOYOTA_RAV4_TSS2.specs,
     flags=ToyotaFlags.RADAR_ACC | ToyotaFlags.ANGLE_CONTROL,
+  )
+  TOYOTA_RAV4_PRIME = PlatformConfig(
+    [],
+    CarSpecs(mass=3650. * CV.LB_TO_KG, wheelbase=2.65, steerRatio=16.88, tireStiffnessFactor=0.5533),
+    dbc_dict('toyota_rav4_prime_generated', 'toyota_tss2_adas'),
+    flags=ToyotaFlags.TSS2 | ToyotaFlags.NO_STOP_TIMER | ToyotaFlags.NO_DSU | ToyotaFlags.SECOC | ToyotaFlags.ALT_GAS_MSG | ToyotaFlags.GEAR_PACKET_HYBRID,
   )
   TOYOTA_MIRAI = ToyotaTSS2PlatformConfig( # TSS 2.5
     [ToyotaCarDocs("Toyota Mirai 2021")],
@@ -575,6 +585,8 @@ UNSUPPORTED_DSU_CAR = CAR.with_flags(ToyotaFlags.UNSUPPORTED_DSU)
 RADAR_ACC_CAR = CAR.with_flags(ToyotaFlags.RADAR_ACC)
 
 ANGLE_CONTROL_CAR = CAR.with_flags(ToyotaFlags.ANGLE_CONTROL)
+
+SECOC_CAR = CAR.with_flags(ToyotaFlags.SECOC)
 
 # no resume button press required
 NO_STOP_TIMER_CAR = CAR.with_flags(ToyotaFlags.NO_STOP_TIMER)
