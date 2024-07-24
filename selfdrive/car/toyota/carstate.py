@@ -331,7 +331,7 @@ class CarState(CarStateBase):
         ("SDSU", 100),
       ]
 
-    if self.CP.flags & ToyotaFlags.ZSS
+    if self.CP.flags & ToyotaFlags.ZSS:
       messages += [("SECONDARY_STEER_ANGLE", 0)]
 
     if CP.flags & ToyotaFlags.SECOC.value:
