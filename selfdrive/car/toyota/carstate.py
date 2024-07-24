@@ -260,8 +260,9 @@ class CarState(CarStateBase):
     fp_ret.dashboardSpeedLimit = self.calculate_speed_limit(cp_cam, frogpilot_toggles)
 
     if self.CP.flags & ToyotaFlags.GEAR_PACKET_HYBRID.value:
-      fp_ret.ecoGear = cp.vl["GEAR_PACKET_HYBRID"]['ECON_ON'] == 1
-      fp_ret.sportGear = cp.vl["GEAR_PACKET_HYBRID"]['SPORT_ON_2' if self.CP.flags & ToyotaFlags.NO_DSU else 'SPORT_ON'] == 1
+      # These mode values don't seem to exist for the GEAR_PACKET_HYBRID
+      fp_ret.ecoGear = False
+      fp_ret.sportGear = False
     else:
       fp_ret.ecoGear = cp.vl["GEAR_PACKET"]['ECON_ON'] == 1
       fp_ret.sportGear = cp.vl["GEAR_PACKET"]['SPORT_ON_2' if self.CP.flags & ToyotaFlags.NO_DSU else 'SPORT_ON'] == 1
