@@ -133,7 +133,6 @@ class CarState(CarStateBase):
         ret.steeringAngleOffsetDeg = self.angle_offset.x
         ret.steeringAngleDeg = torque_sensor_angle_deg - self.angle_offset.x
 
-    can_gear = int(cp.vl["GEAR_PACKET"]["GEAR"])
     if self.CP.flags & ToyotaFlags.GEAR_PACKET_HYBRID.value:
       can_gear = int(cp.vl["GEAR_PACKET_HYBRID"]["GEAR"])
     else:
@@ -332,7 +331,8 @@ class CarState(CarStateBase):
         ("SDSU", 100),
       ]
 
-    messages += [("SECONDARY_STEER_ANGLE", 0)]
+    if self.CP.flags & ToyotaFlags.ZSS
+      messages += [("SECONDARY_STEER_ANGLE", 0)]
 
     if CP.flags & ToyotaFlags.SECOC.value:
       messages += [
