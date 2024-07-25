@@ -246,8 +246,15 @@ class CarState(CarStateBase):
       message_keys = ["LDA_ON_MESSAGE", "SET_ME_X02"]
       self.lkas_enabled = any(self.lkas_hud.get(key) == 1 for key in message_keys)
 
-    self.pcm_accel_net = cp.vl["PCM_CRUISE"]["ACCEL_NET"]
-    self.pcm_neutral_force = cp.vl["PCM_CRUISE"]["NEUTRAL_FORCE"]
+    if "ACCEL_NET" in cp.vl["PCM_CRUISE"]:
+      self.pcm_accel_net = cp.vl["PCM_CRUISE"]["ACCEL_NET"]
+    else:
+      self.pcm_accel_net = 0
+
+    if "NEUTRAL_FORCE" in cp.vl["PCM_CRUISE"]:
+      self.pcm_neutral_force = cp.vl["PCM_CRUISE"]["NEUTRAL_FORCE"]
+    else:
+      self.pcm_neutral_force = 0
 
     # ZSS Support - Credit goes to the DragonPilot team!
     if self.CP.flags & ToyotaFlags.ZSS and self.zss_threshold_count < ZSS_THRESHOLD_COUNT:
