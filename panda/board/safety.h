@@ -559,22 +559,33 @@ bool steer_torque_cmd_checks(int desired_torque, int steer_req, const SteeringLi
   }
 
   if (controls_allowed || aol_allowed) {
+    float limits_adjustment;
+    if (brake_pressed) {
+      // If brake is pressed, allow sharper turns because the driver will be able to react quickly if the steering
+      // command is incorrect since their foot is already on the brake. This allows for navigating windy roads better.
+      limits_adjustment = 1.25f;
+    }
+    else {
+      // No adjustment if brake isn't pressed
+      limits_adjustment = 1;
+    }
+
     // *** global torque limit check ***
-    violation |= max_limit_check(desired_torque, limits.max_steer, -limits.max_steer);
+    violation |= max_limit_check(desired_torque, limits.max_steer * limits_adjustment, -limits.max_steer * limits_adjustment);
 
     // *** torque rate limit check ***
     if (limits.type == TorqueDriverLimited) {
       violation |= driver_limit_check(desired_torque, desired_torque_last, &torque_driver,
-                                      limits.max_steer, limits.max_rate_up, limits.max_rate_down,
+                                      limits.max_steer * limits_adjustment, limits.max_rate_up * limits_adjustment, limits.max_rate_down * limits_adjustment,
                                       limits.driver_torque_allowance, limits.driver_torque_factor);
     } else {
       violation |= dist_to_meas_check(desired_torque, desired_torque_last, &torque_meas,
-                                      limits.max_rate_up, limits.max_rate_down, limits.max_torque_error);
+                                      limits.max_rate_up * limits_adjustment, limits.max_rate_down * limits_adjustment, limits.max_torque_error);
     }
     desired_torque_last = desired_torque;
 
     // *** torque real time rate limit check ***
-    violation |= rt_rate_limit_check(desired_torque, rt_torque_last, limits.max_rt_delta);
+    violation |= rt_rate_limit_check(desired_torque, rt_torque_last, limits.max_rt_delta * limits_adjustment);
 
     // every RT_INTERVAL set the new limits
     uint32_t ts_elapsed = get_ts_elapsed(ts, ts_torque_check_last);
