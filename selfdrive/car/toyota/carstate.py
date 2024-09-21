@@ -341,7 +341,7 @@ class CarState(CarStateBase):
     if CP.flags & ToyotaFlags.ALT_GAS_MSG.value:
       messages.append(("GAS_PEDAL", 42))
 
-    if CP.carFingerprint not in [CAR.TOYOTA_MIRAI, CAR.TOYOTA_RAV4_PRIME]:
+    if CP.carFingerprint not in [CAR.TOYOTA_MIRAI, CAR.TOYOTA_RAV4_PRIME, CAR.TOYOTA_SIENNA_HYBRID]:
       messages.append(("ENGINE_RPM", 42))
 
     if CP.carFingerprint in UNSUPPORTED_DSU_CAR:
