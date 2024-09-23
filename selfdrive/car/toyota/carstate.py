@@ -325,6 +325,7 @@ class CarState(CarStateBase):
       ("STEER_ANGLE_SENSOR", 80),
       ("PCM_CRUISE", 33),
       ("PCM_CRUISE_SM", 1),
+      ("VSC1S07", 20),
       ("STEER_TORQUE_SENSOR", 50),
       ("CLUTCH", 16),
     ]
