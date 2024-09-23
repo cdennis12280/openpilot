@@ -317,17 +317,13 @@ class CarState(CarStateBase):
       ("BODY_CONTROL_STATE", 3),
       ("BODY_CONTROL_STATE_2", 2),
       ("ESP_CONTROL", 3),
-      ("VSC1S07", 20),
       ("EPS_STATUS", 25),
-      ("BRAKE", 80),
       ("BRAKE_MODULE", 40),
       ("WHEEL_SPEEDS", 80),
       ("STEER_ANGLE_SENSOR", 80),
       ("PCM_CRUISE", 33),
       ("PCM_CRUISE_SM", 1),
-      ("VSC1S07", 20),
       ("STEER_TORQUE_SENSOR", 50),
-      ("CLUTCH", 16),
     ]
 
     if CP.flags & ToyotaFlags.RAISED_ACCEL_LIMIT:
@@ -343,6 +339,13 @@ class CarState(CarStateBase):
 
     if CP.carFingerprint not in [CAR.TOYOTA_MIRAI, CAR.TOYOTA_RAV4_PRIME, CAR.TOYOTA_SIENNA_HYBRID]:
       messages.append(("ENGINE_RPM", 42))
+
+    # We don't have these messages defined for SecOC cars yet
+    if CP.carFingerprint not in [CAR.TOYOTA_RAV4_PRIME, CAR.TOYOTA_SIENNA_HYBRID]:
+      messages.append()()("VSC1S07", 20))
+      messages.append()()("BRAKE", 80),
+      messages.append()(("CLUTCH", 16))
+)
 
     if CP.carFingerprint in UNSUPPORTED_DSU_CAR:
       messages.append(("DSU_CRUISE", 5))
